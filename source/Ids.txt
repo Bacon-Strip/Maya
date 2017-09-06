@@ -1,0 +1,16 @@
+// This plug-in is part of a rigging package known as The "Bacon-Strip Rig"
+// Bacon-Strip ID Block is : 0x0012a940 - 0x0012aa3f
+
+0x0012a940 DEA2E8690150 baconFatBone
+0x0012a941 DEA2E8690151 baconFatLine
+0x0012a942 DEA2E8690152 baconFatRibbon
+
+0x0012a950 DEA2E8690146 baconAlign
+0x0012a951 DEA2E8690147 baconLookAt
+0x0012a953 DEA2E8690148 baconTransformDecompose
+0x0012a954 DEA2E8690149 bacon2BoneIK
+0x0012a955 DEA2E8690145 baconRibbon
+0x0012a956 DEA2E8690144 baconSlidingPivot
+
+
+

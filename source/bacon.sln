@@ -1,0 +1,88 @@
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 14
+VisualStudioVersion = 14.0.25420.1
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "baconAlign", "baconAlign\baconAlign.vcxproj", "{681412B0-F197-4A2F-9263-DEA2E8690146}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "baconLookAt", "baconLookAt\baconLookAt.vcxproj", "{681412B0-F197-4A2F-9263-DEA2E8690147}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "baconTransformDecompose", "baconQuatToEuler\baconQuatToEuler.vcxproj", "{681412B0-F197-4A2F-9263-DEA2E8690148}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "baconFatBone", "baconFatBone\baconFatBone.vcxproj", "{681412B0-F197-4A2F-9263-DEA2E8690150}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "baconFatLine", "baconFatLine\baconFatLine.vcxproj", "{681412B0-F197-4A2F-9263-DEA2E8690151}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "baconRibbon", "baconRibbon\baconRibbon.vcxproj", "{681412B0-F197-4A2F-9263-DEA2E8690145}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "baconFatRibbon", "baconFatRibbon\baconFatRibbon.vcxproj", "{681412B0-F197-4A2F-9263-DEA2E8690152}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "bacon2BoneIK", "bacon2BoneIK\bacon2BoneIK.vcxproj", "{681412B0-F197-4A2F-9263-DEA2E8690149}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "baconSlidingPivot", "baconSlidingPivot\baconSlidingPivot.vcxproj", "{681412B0-F197-4A2F-9263-DEA2E8690144}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|x64 = Debug|x64
+		Release|x64 = Release|x64
+		ReleaseDebug|x64 = ReleaseDebug|x64
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{681412B0-F197-4A2F-9263-DEA2E8690146}.Debug|x64.ActiveCfg = Debug|x64
+		{681412B0-F197-4A2F-9263-DEA2E8690146}.Debug|x64.Build.0 = Debug|x64
+		{681412B0-F197-4A2F-9263-DEA2E8690146}.Release|x64.ActiveCfg = Release|x64
+		{681412B0-F197-4A2F-9263-DEA2E8690146}.Release|x64.Build.0 = Release|x64
+		{681412B0-F197-4A2F-9263-DEA2E8690146}.ReleaseDebug|x64.ActiveCfg = ReleaseDebug|x64
+		{681412B0-F197-4A2F-9263-DEA2E8690146}.ReleaseDebug|x64.Build.0 = ReleaseDebug|x64
+		{681412B0-F197-4A2F-9263-DEA2E8690147}.Debug|x64.ActiveCfg = Debug|x64
+		{681412B0-F197-4A2F-9263-DEA2E8690147}.Debug|x64.Build.0 = Debug|x64
+		{681412B0-F197-4A2F-9263-DEA2E8690147}.Release|x64.ActiveCfg = Release|x64
+		{681412B0-F197-4A2F-9263-DEA2E8690147}.Release|x64.Build.0 = Release|x64
+		{681412B0-F197-4A2F-9263-DEA2E8690147}.ReleaseDebug|x64.ActiveCfg = ReleaseDebug|x64
+		{681412B0-F197-4A2F-9263-DEA2E8690147}.ReleaseDebug|x64.Build.0 = ReleaseDebug|x64
+		{681412B0-F197-4A2F-9263-DEA2E8690148}.Debug|x64.ActiveCfg = Debug|x64
+		{681412B0-F197-4A2F-9263-DEA2E8690148}.Debug|x64.Build.0 = Debug|x64
+		{681412B0-F197-4A2F-9263-DEA2E8690148}.Release|x64.ActiveCfg = Release|x64
+		{681412B0-F197-4A2F-9263-DEA2E8690148}.Release|x64.Build.0 = Release|x64
+		{681412B0-F197-4A2F-9263-DEA2E8690148}.ReleaseDebug|x64.ActiveCfg = ReleaseDebug|x64
+		{681412B0-F197-4A2F-9263-DEA2E8690148}.ReleaseDebug|x64.Build.0 = ReleaseDebug|x64
+		{681412B0-F197-4A2F-9263-DEA2E8690150}.Debug|x64.ActiveCfg = Debug|x64
+		{681412B0-F197-4A2F-9263-DEA2E8690150}.Debug|x64.Build.0 = Debug|x64
+		{681412B0-F197-4A2F-9263-DEA2E8690150}.Release|x64.ActiveCfg = Release|x64
+		{681412B0-F197-4A2F-9263-DEA2E8690150}.Release|x64.Build.0 = Release|x64
+		{681412B0-F197-4A2F-9263-DEA2E8690150}.ReleaseDebug|x64.ActiveCfg = ReleaseDebug|x64
+		{681412B0-F197-4A2F-9263-DEA2E8690150}.ReleaseDebug|x64.Build.0 = ReleaseDebug|x64
+		{681412B0-F197-4A2F-9263-DEA2E8690151}.Debug|x64.ActiveCfg = Debug|x64
+		{681412B0-F197-4A2F-9263-DEA2E8690151}.Debug|x64.Build.0 = Debug|x64
+		{681412B0-F197-4A2F-9263-DEA2E8690151}.Release|x64.ActiveCfg = Release|x64
+		{681412B0-F197-4A2F-9263-DEA2E8690151}.Release|x64.Build.0 = Release|x64
+		{681412B0-F197-4A2F-9263-DEA2E8690151}.ReleaseDebug|x64.ActiveCfg = ReleaseDebug|x64
+		{681412B0-F197-4A2F-9263-DEA2E8690151}.ReleaseDebug|x64.Build.0 = ReleaseDebug|x64
+		{681412B0-F197-4A2F-9263-DEA2E8690145}.Debug|x64.ActiveCfg = Debug|x64
+		{681412B0-F197-4A2F-9263-DEA2E8690145}.Debug|x64.Build.0 = Debug|x64
+		{681412B0-F197-4A2F-9263-DEA2E8690145}.Release|x64.ActiveCfg = Release|x64
+		{681412B0-F197-4A2F-9263-DEA2E8690145}.Release|x64.Build.0 = Release|x64
+		{681412B0-F197-4A2F-9263-DEA2E8690145}.ReleaseDebug|x64.ActiveCfg = ReleaseDebug|x64
+		{681412B0-F197-4A2F-9263-DEA2E8690145}.ReleaseDebug|x64.Build.0 = ReleaseDebug|x64
+		{681412B0-F197-4A2F-9263-DEA2E8690152}.Debug|x64.ActiveCfg = Debug|x64
+		{681412B0-F197-4A2F-9263-DEA2E8690152}.Debug|x64.Build.0 = Debug|x64
+		{681412B0-F197-4A2F-9263-DEA2E8690152}.Release|x64.ActiveCfg = Release|x64
+		{681412B0-F197-4A2F-9263-DEA2E8690152}.Release|x64.Build.0 = Release|x64
+		{681412B0-F197-4A2F-9263-DEA2E8690152}.ReleaseDebug|x64.ActiveCfg = ReleaseDebug|x64
+		{681412B0-F197-4A2F-9263-DEA2E8690152}.ReleaseDebug|x64.Build.0 = ReleaseDebug|x64
+		{681412B0-F197-4A2F-9263-DEA2E8690149}.Debug|x64.ActiveCfg = Debug|x64
+		{681412B0-F197-4A2F-9263-DEA2E8690149}.Debug|x64.Build.0 = Debug|x64
+		{681412B0-F197-4A2F-9263-DEA2E8690149}.Release|x64.ActiveCfg = Release|x64
+		{681412B0-F197-4A2F-9263-DEA2E8690149}.Release|x64.Build.0 = Release|x64
+		{681412B0-F197-4A2F-9263-DEA2E8690149}.ReleaseDebug|x64.ActiveCfg = ReleaseDebug|x64
+		{681412B0-F197-4A2F-9263-DEA2E8690149}.ReleaseDebug|x64.Build.0 = ReleaseDebug|x64
+		{681412B0-F197-4A2F-9263-DEA2E8690144}.Debug|x64.ActiveCfg = Debug|x64
+		{681412B0-F197-4A2F-9263-DEA2E8690144}.Debug|x64.Build.0 = Debug|x64
+		{681412B0-F197-4A2F-9263-DEA2E8690144}.Release|x64.ActiveCfg = Release|x64
+		{681412B0-F197-4A2F-9263-DEA2E8690144}.Release|x64.Build.0 = Release|x64
+		{681412B0-F197-4A2F-9263-DEA2E8690144}.ReleaseDebug|x64.ActiveCfg = ReleaseDebug|x64
+		{681412B0-F197-4A2F-9263-DEA2E8690144}.ReleaseDebug|x64.Build.0 = ReleaseDebug|x64
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal
