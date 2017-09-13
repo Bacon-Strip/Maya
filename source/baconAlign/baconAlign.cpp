@@ -74,6 +74,7 @@ public:
 	static  MObject		weight;						// The weight value.
 	static  MObject		targetWorldMatrix;
 	static  MObject		parentInverseMatrix;
+	static  MObject		offsetMatrix;
 	static  MObject		jointOrient;
 	static  MObject		jointOrientX;
 	static  MObject		jointOrientY;
@@ -92,6 +93,7 @@ MTypeId     baconAlign::id( 0x0012a950 );
 MObject     baconAlign::weight;        
 MObject		baconAlign::targetWorldMatrix;
 MObject		baconAlign::parentInverseMatrix;
+MObject		baconAlign::offsetMatrix;
 MObject		baconAlign::jointOrient;
 MObject		baconAlign::jointOrientX;
 MObject		baconAlign::jointOrientY;
@@ -148,6 +150,9 @@ MStatus baconAlign::compute( const MPlug& plug, MDataBlock& data )
 		MDataHandle parentInverseMatrixHandle = data.inputValue(parentInverseMatrix, &returnStatus);
 		MFloatMatrix pFM = parentInverseMatrixHandle.asFloatMatrix();
 
+		MDataHandle offsetMatrixHandle = data.inputValue(offsetMatrix, &returnStatus);
+		MFloatMatrix offsetFM = offsetMatrixHandle.asFloatMatrix();
+
 		MDataHandle jointOrientXHandle = data.inputValue(jointOrientX, &returnStatus);
 		MAngle jointOrientXValue = jointOrientXHandle.asAngle();
 		MDataHandle jointOrientYHandle = data.inputValue(jointOrientY, &returnStatus);
@@ -157,9 +162,10 @@ MStatus baconAlign::compute( const MPlug& plug, MDataBlock& data )
 
 
 		// Calculation
-		MMatrix tTM = FloatMatrixToMatrix(tFM);
-		MMatrix ipTM = FloatMatrixToMatrix(pFM);
-		MMatrix localTM = tTM * ipTM;
+		MMatrix targetTM = FloatMatrixToMatrix(tFM);
+		MMatrix iparentTM = FloatMatrixToMatrix(pFM);
+		MMatrix offsetTM = FloatMatrixToMatrix(offsetFM);
+		MMatrix localTM = (offsetTM * targetTM) * iparentTM;
 		MMatrix jointOrientTM = MEulerRotation(jointOrientXValue.value(), jointOrientYValue.value(),
 			jointOrientZValue.value()).asMatrix();
 		MMatrix outputTM = localTM * jointOrientTM.inverse();
@@ -240,7 +246,13 @@ MStatus baconAlign::initialize()
 	numAttr.setStorable(true);
 	numAttr.setKeyable(true);
 	stat = addAttribute(jointOrient);
-		
+
+	// input offsetMatrix
+	offsetMatrix = matrixAttr.create("offsetMatrix", "offfsetTM", matrixAttr.kFloat);
+	matrixAttr.setStorable(true);
+	matrixAttr.setKeyable(true);
+	stat = addAttribute(offsetMatrix);
+
 	// input targetWorldMatrix
 	targetWorldMatrix = matrixAttr.create("targetWorldMatrix", "twTM", matrixAttr.kFloat);
 	matrixAttr.setStorable(true);
@@ -290,6 +302,7 @@ MStatus baconAlign::initialize()
 		attributeAffects(jointOrientZ,			obj);
 		attributeAffects(targetWorldMatrix,		obj);
 		attributeAffects(parentInverseMatrix,	obj);
+		attributeAffects(offsetMatrix, obj);
 	}
 
 	return MS::kSuccess;

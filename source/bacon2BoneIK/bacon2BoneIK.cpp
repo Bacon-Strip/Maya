@@ -78,7 +78,7 @@ public:
 
 	// inputs
 	static  MObject		weight;
-	static  MObject		PrimaryRotations;
+	static  MObject		BoneDirection;
 	static  MObject		rootMatrix;
 	static  MObject		goalMatrix;
 	static  MObject		upMatrix;
@@ -121,7 +121,7 @@ MObject     bacon2BoneIK::stretchComp;
 MObject     bacon2BoneIK::Bone1Comp;
 MObject     bacon2BoneIK::Bone2Comp;
 
-MObject		bacon2BoneIK::PrimaryRotations;
+MObject		bacon2BoneIK::BoneDirection;
 MObject		bacon2BoneIK::rootMatrix;
 MObject		bacon2BoneIK::goalMatrix;
 MObject		bacon2BoneIK::upMatrix;
@@ -183,6 +183,19 @@ MMatrix FloatMatrixToMatrix(MFloatMatrix fTM)
 	return returnTM;
 }
 
+MMatrix MirrorMatrix(MMatrix inTM, bool mirror = true)
+{
+	MMatrix returnTM = inTM;
+	if (mirror)
+	{
+		float neg(-1.0f);
+		returnTM = setRow(returnTM, MVector(inTM[0][0] * neg, inTM[0][1] * neg, inTM[0][2] * neg), 0);
+		returnTM = setRow(returnTM, MVector(inTM[1][0] * neg, inTM[1][1] * neg, inTM[1][2] * neg), 1);
+		returnTM = setRow(returnTM, MVector(inTM[2][0] * neg, inTM[2][1] * neg, inTM[2][2] * neg), 2);
+	}
+	return returnTM;
+}
+
 MMatrix matrix3(MVector row1, MVector row2, MVector row3, MVector row4)
 {
 	MMatrix returnTM = MMatrix();
@@ -229,8 +242,9 @@ MStatus bacon2BoneIK::compute(const MPlug& plug, MDataBlock& data)
 		MDataHandle stretchScaleHandle = data.inputValue(stretchScale, &returnStatus);
 		double stretchScaleValue = stretchScaleHandle.asDouble();
 
-		MDataHandle PrimaryRotationsHandle = data.inputValue(PrimaryRotations, &returnStatus);
-		short PrimaryRotationsValue = PrimaryRotationsHandle.asShort();
+		MDataHandle BoneDirectionHandle = data.inputValue(BoneDirection, &returnStatus);
+		short BoneDirectionValue = BoneDirectionHandle.asShort();
+		bool isMirrored(BoneDirectionValue==1);
 
 		MDataHandle Bone1InitialPositionHandle = data.inputValue(Bone1InitialPosition, &returnStatus);
 		MVector Bone1InitialPositionValue = Bone1InitialPositionHandle.asFloatVector();
@@ -320,6 +334,15 @@ MStatus bacon2BoneIK::compute(const MPlug& plug, MDataBlock& data)
 		// Solution Plane
 		MVector upDirection = upPos - rootPos;
 		upDirection.normalize();
+
+		MVector boneAxis = goalLine;
+		boneAxis.normalize();
+		MVector bendAxis = boneAxis ^ upDirection;
+		bendAxis.normalize();
+
+
+
+
 		MVector solutionPlaneX = goalLine;
 		solutionPlaneX.normalize();
 		MVector solutionPlaneZ = solutionPlaneX ^ upDirection;
@@ -328,10 +351,14 @@ MStatus bacon2BoneIK::compute(const MPlug& plug, MDataBlock& data)
 		solutionPlaneY.normalize();
 		MMatrix SolutionPlaneMatrix = matrix3(solutionPlaneX, solutionPlaneY, solutionPlaneZ, rootPos);
 
+
+
+
+
 		// Bone1
 		MMatrix Bone1AngleMatrix = rotateZMatrix(angleB);
 		MMatrix Bone1MatrixWorld = Bone1AngleMatrix * SolutionPlaneMatrix;
-		MMatrix Bone1MatrixLocal = Bone1MatrixWorld * MrootTM.inverse();
+		MMatrix Bone1MatrixLocal = (MirrorMatrix(Bone1MatrixWorld, isMirrored)) * MrootTM.inverse();
 		MMatrix Bone1JointOrientTM = MEulerRotation(Bone1OrientXValue.value(), Bone1OrientYValue.value(),
 			Bone1OrientZValue.value()).asMatrix();
 		MMatrix Bone1MatrixPLocal = Bone1MatrixLocal * Bone1JointOrientTM.inverse();
@@ -351,31 +378,16 @@ MStatus bacon2BoneIK::compute(const MPlug& plug, MDataBlock& data)
 		MMatrix Bone2MatrixWorld = matrix3(Bone2DirectionX, Bone2DirectionY, Bone2DirectionZ, Bone2RootPos);
 		MMatrix Bone2JointOrientTM = MEulerRotation(Bone2OrientXValue.value(), Bone2OrientYValue.value(),
 			Bone2OrientZValue.value()).asMatrix();
-		MMatrix Bone2MatrixLocal(Bone2MatrixWorld * Bone1MatrixWorld.inverse());
+		MMatrix Bone2MatrixLocal((MirrorMatrix(Bone2MatrixWorld, isMirrored)) * Bone1MatrixWorld.inverse());
 		MMatrix Bone2MatrixPLocal(Bone2MatrixLocal * Bone2JointOrientTM.inverse());
 		MTransformationMatrix Bone2TransformationMatrix(Bone2MatrixPLocal);
 		MEulerRotation Bone2Angles(Bone2TransformationMatrix.eulerRotation());
 
+		// Ouput Calculation
 
-/*
-		//Stretch Values -- this method will cause a macarroni elbow or knee. Valid, but not as nice.
-		MVector Bone1StretchPositionValue = Bone1InitialPositionValue;
-		MVector Bone2StretchPositionValue(SideA, 0.0, 0.0);
-		MVector handStretchPositionValue(SideB, 0.0, 0.0);
-		if (stetchIKValue && goalLength >= maxReach)
-		{
-			double stretchValue = goalLength - maxReach;
-			//double handReach = maxReach * (4.0 / 3.0);
-			double handReach = maxReach * (1.0 + handStretchValue);
-			double Bone1Ratio = SideA / handReach;
-			double Bone2Ratio = SideB / handReach;
-			double handRatio = 1.0 - Bone1Ratio - Bone2Ratio;
-			MVector Bone1Direction(Bone1MatrixLocal[0][0], Bone1MatrixLocal[0][1], Bone1MatrixLocal[0][2]);
-			Bone1StretchPositionValue += (Bone1Ratio * stretchValue) * Bone1Direction;
-			Bone2StretchPositionValue.x += stretchValue * Bone2Ratio;
-			handStretchPositionValue.x += stretchValue * handRatio;
-		}
-*/
+
+
+
 
 		//Stretch Values
 		MVector Bone1Direction(Bone1MatrixLocal[0][0], Bone1MatrixLocal[0][1], Bone1MatrixLocal[0][2]);
@@ -486,14 +498,15 @@ bodyPartMembersAttr.setKeyable(True)
 
 */
 
-	// Input primary rotation
-	PrimaryRotations = enumAttr.create("PrimaryRotations", "pr", 0);
-	enumAttr.addField("ZZ", 0);
-	enumAttr.addField("YZ", 1);
-	enumAttr.addField("YY", 2);
+// Input Bend Direction
+
+	// Input Bone Direction
+	BoneDirection = enumAttr.create("BoneDirection", "boneDir", 0);
+	enumAttr.addField("X", 0);
+	enumAttr.addField("-X", 1);
 	enumAttr.setHidden(false);
 	enumAttr.setKeyable(false);
-	stat = addAttribute(PrimaryRotations);
+	stat = addAttribute(BoneDirection);
 	if (!stat) { stat.perror("addAttribute"); return stat; }
 
 
@@ -694,31 +707,33 @@ bodyPartMembersAttr.setKeyable(True)
 	// DIRTY EVENTS ---------------------------------------------------------------------
 	MObject AffectedByMany[] =
 	{	
-		Bone1Rotation,			Bone1RotationX,			Bone1RotationY,			Bone1RotationZ,
-		Bone2Rotation,				Bone2RotationX,				Bone2RotationY,				Bone2RotationZ,
+		Bone1Rotation,				Bone1RotationX,				Bone1RotationY,			Bone1RotationZ,
+		Bone2Rotation,				Bone2RotationX,				Bone2RotationY,			Bone2RotationZ,
 		Bone1StretchPosition,		Bone2StretchPosition,		handStretchPosition
 
 	};
 	for (MObject& obj : AffectedByMany)
 	{
-		attributeAffects(stretchScale,				obj);
-		attributeAffects(stretchBlend,				obj);
-		attributeAffects(stretchIK,					obj);
-		attributeAffects(handStretch,				obj);
+		attributeAffects(stretchScale,			obj);
+		attributeAffects(stretchBlend,			obj);
+		attributeAffects(stretchIK,				obj);
+		attributeAffects(handStretch,			obj);
 		attributeAffects(Bone1InitialPosition,	obj);
-		attributeAffects(Bone1Orient,				obj);
+		attributeAffects(Bone1Orient,			obj);
 		attributeAffects(Bone1OrientX,			obj);
 		attributeAffects(Bone1OrientY,			obj);
 		attributeAffects(Bone1OrientZ,			obj);
-		attributeAffects(Bone2Orient,				obj);
-		attributeAffects(Bone2OrientX,				obj);
-		attributeAffects(Bone2OrientY,				obj);
-		attributeAffects(Bone2OrientZ,				obj);
-		attributeAffects(Bone1Length,				obj);
-		attributeAffects(Bone2Length,				obj);
-		attributeAffects(rootMatrix,				obj);
-		attributeAffects(goalMatrix,				obj);
-		attributeAffects(upMatrix,					obj);
+		attributeAffects(Bone2Orient,			obj);
+		attributeAffects(Bone2OrientX,			obj);
+		attributeAffects(Bone2OrientY,			obj);
+		attributeAffects(Bone2OrientZ,			obj);
+		attributeAffects(Bone1Length,			obj);
+		attributeAffects(Bone2Length,			obj);
+		attributeAffects(rootMatrix,			obj);
+		attributeAffects(goalMatrix,			obj);
+		attributeAffects(upMatrix,				obj);
+		attributeAffects(BoneDirection,			obj);
+
 	}
 
 	/*

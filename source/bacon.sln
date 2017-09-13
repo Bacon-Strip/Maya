@@ -20,6 +20,14 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "bacon2BoneIK", "bacon2BoneI
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "baconSlidingPivot", "baconSlidingPivot\baconSlidingPivot.vcxproj", "{681412B0-F197-4A2F-9263-DEA2E8690144}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "bacon3BoneIK", "bacon3BoneIK\bacon3BoneIK.vcxproj", "{681412B0-F197-4A2F-9263-DEA2E8690139}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "baconDualHinge", "baconDualHinge\baconDualHinge.vcxproj", "{681412B0-F197-4A2F-9263-BAC00012A960}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "baconRoll", "baconRoll\baconRoll.vcxproj", "{681412B0-F197-4A2F-9263-DEA2E8690141}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "baconBlend", "baconBlend\baconBlend.vcxproj", "{681412B0-F197-4A2F-9263-BAC00012A961}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x64 = Debug|x64
@@ -81,6 +89,30 @@ Global
 		{681412B0-F197-4A2F-9263-DEA2E8690144}.Release|x64.Build.0 = Release|x64
 		{681412B0-F197-4A2F-9263-DEA2E8690144}.ReleaseDebug|x64.ActiveCfg = ReleaseDebug|x64
 		{681412B0-F197-4A2F-9263-DEA2E8690144}.ReleaseDebug|x64.Build.0 = ReleaseDebug|x64
+		{681412B0-F197-4A2F-9263-DEA2E8690139}.Debug|x64.ActiveCfg = Debug|x64
+		{681412B0-F197-4A2F-9263-DEA2E8690139}.Debug|x64.Build.0 = Debug|x64
+		{681412B0-F197-4A2F-9263-DEA2E8690139}.Release|x64.ActiveCfg = Release|x64
+		{681412B0-F197-4A2F-9263-DEA2E8690139}.Release|x64.Build.0 = Release|x64
+		{681412B0-F197-4A2F-9263-DEA2E8690139}.ReleaseDebug|x64.ActiveCfg = ReleaseDebug|x64
+		{681412B0-F197-4A2F-9263-DEA2E8690139}.ReleaseDebug|x64.Build.0 = ReleaseDebug|x64
+		{681412B0-F197-4A2F-9263-BAC00012A960}.Debug|x64.ActiveCfg = Debug|x64
+		{681412B0-F197-4A2F-9263-BAC00012A960}.Debug|x64.Build.0 = Debug|x64
+		{681412B0-F197-4A2F-9263-BAC00012A960}.Release|x64.ActiveCfg = Release|x64
+		{681412B0-F197-4A2F-9263-BAC00012A960}.Release|x64.Build.0 = Release|x64
+		{681412B0-F197-4A2F-9263-BAC00012A960}.ReleaseDebug|x64.ActiveCfg = ReleaseDebug|x64
+		{681412B0-F197-4A2F-9263-BAC00012A960}.ReleaseDebug|x64.Build.0 = ReleaseDebug|x64
+		{681412B0-F197-4A2F-9263-DEA2E8690141}.Debug|x64.ActiveCfg = Debug|x64
+		{681412B0-F197-4A2F-9263-DEA2E8690141}.Debug|x64.Build.0 = Debug|x64
+		{681412B0-F197-4A2F-9263-DEA2E8690141}.Release|x64.ActiveCfg = Release|x64
+		{681412B0-F197-4A2F-9263-DEA2E8690141}.Release|x64.Build.0 = Release|x64
+		{681412B0-F197-4A2F-9263-DEA2E8690141}.ReleaseDebug|x64.ActiveCfg = ReleaseDebug|x64
+		{681412B0-F197-4A2F-9263-DEA2E8690141}.ReleaseDebug|x64.Build.0 = ReleaseDebug|x64
+		{681412B0-F197-4A2F-9263-BAC00012A961}.Debug|x64.ActiveCfg = Debug|x64
+		{681412B0-F197-4A2F-9263-BAC00012A961}.Debug|x64.Build.0 = Debug|x64
+		{681412B0-F197-4A2F-9263-BAC00012A961}.Release|x64.ActiveCfg = Release|x64
+		{681412B0-F197-4A2F-9263-BAC00012A961}.Release|x64.Build.0 = Release|x64
+		{681412B0-F197-4A2F-9263-BAC00012A961}.ReleaseDebug|x64.ActiveCfg = ReleaseDebug|x64
+		{681412B0-F197-4A2F-9263-BAC00012A961}.ReleaseDebug|x64.Build.0 = ReleaseDebug|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
