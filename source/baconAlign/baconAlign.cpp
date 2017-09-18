@@ -193,7 +193,7 @@ MStatus baconAlign::compute( const MPlug& plug, MDataBlock& data )
 
 			// aligned Position
 			MDataHandle alignedPositionHandle = data.outputValue(baconAlign::alignedPosition);
-			alignedPositionHandle.set3Double(localTM[3][0], localTM[3][1], localTM[3][2]);
+			alignedPositionHandle.set3Float(localTM[3][0], localTM[3][1], localTM[3][2]);
 			alignedPositionHandle.setClean();
 
 		}

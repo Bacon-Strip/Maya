@@ -169,7 +169,12 @@ MMatrix transMatrix(MVector pos)
 
 MVector Bezier4Interpolation(MVector P0, MVector P1, MVector P2, MVector P3, float u)
 {
-	float u2(u * u);	float u3(u2 * u);	return (P0 + (-P0 * 3.0f + u * (3.0f * P0 - P0 * u)) * u		+ (3.0f * P1 + u * (-6.0f * P1 + P1 * 3.0f * u)) * u		+ (P2 * 3.0f - P2 * 3.0f * u) * u2 + P3 * u3);}
+	float u2(u * u);
+	float u3(u2 * u);
+	return (P0 + (-P0 * 3.0f + u * (3.0f * P0 - P0 * u)) * u
+		+ (3.0f * P1 + u * (-6.0f * P1 + P1 * 3.0f * u)) * u
+		+ (P2 * 3.0f - P2 * 3.0f * u) * u2 + P3 * u3);
+}
 
 MMatrix FloatMatrixToMatrix(MFloatMatrix fTM)
 {
@@ -787,10 +792,10 @@ void transformDrawOverride::addUIDrawables(
 	bezierLine.append(tdData->fEndPos);
 
 	MPointArray ContrappostoLines;
-	endTangentLine.append(tdData->fContrappossto1A);
-	endTangentLine.append(tdData->fContrappossto1B);
-	endTangentLine.append(tdData->fContrappossto2A);
-	endTangentLine.append(tdData->fContrappossto2B);
+	ContrappostoLines.append(tdData->fContrappossto1A);
+	ContrappostoLines.append(tdData->fContrappossto1B);
+	ContrappostoLines.append(tdData->fContrappossto2A);
+	ContrappostoLines.append(tdData->fContrappossto2B);
 	
 
 	drawManager.beginDrawable();
@@ -829,6 +834,7 @@ void transformDrawOverride::addUIDrawables(
 	drawManager.setColor(wColor);
 	drawManager.setLineWidth(tdData->fSplineThickness);
 	drawManager.setLineStyle(MHWRender::MUIDrawManager::kSolid);
+
 	if (tdData->fShowSpline)
 	{
 		drawManager.mesh(MHWRender::MUIDrawManager::kLines, bezierLine);

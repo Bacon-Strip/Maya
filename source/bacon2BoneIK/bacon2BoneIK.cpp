@@ -376,6 +376,11 @@ MStatus bacon2BoneIK::compute(const MPlug& plug, MDataBlock& data)
 		MVector Bone2DirectionZ(Bone2DirectionX ^ Bone2DirectionY);
 		Bone2DirectionZ.normalize();
 		MMatrix Bone2MatrixWorld = matrix3(Bone2DirectionX, Bone2DirectionY, Bone2DirectionZ, Bone2RootPos);
+		if (isMirrored)
+		{
+			MMatrix CorrectionMatrix = rotateZMatrix(M_PI);
+			Bone2MatrixWorld = CorrectionMatrix * Bone2MatrixWorld;
+		}
 		MMatrix Bone2JointOrientTM = MEulerRotation(Bone2OrientXValue.value(), Bone2OrientYValue.value(),
 			Bone2OrientZValue.value()).asMatrix();
 		MMatrix Bone2MatrixLocal((MirrorMatrix(Bone2MatrixWorld, isMirrored)) * Bone1MatrixWorld.inverse());
