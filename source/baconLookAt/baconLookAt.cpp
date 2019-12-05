@@ -63,18 +63,19 @@
 #include <maya/MFloatPoint.h>
 #include <maya/MFloatMatrix.h>
 #include <maya/MEulerRotation.h>
+#include <maya/MQuaternion.h>
 #include <maya/MTransformationMatrix.h>
 #include <maya/MDoubleArray.h>
 #include <maya/MScriptUtil.h>
 
-
+ 
 class baconLookAt : public MPxNode
 {
 public:
-	baconLookAt();
-	virtual				~baconLookAt();
+						baconLookAt();
+	virtual				~baconLookAt(); 
 
-	virtual MStatus		compute(const MPlug& plug, MDataBlock& data);
+	virtual MStatus		compute( const MPlug& plug, MDataBlock& data );
 
 	static  void*		creator();
 	static  MStatus		initialize();
@@ -83,33 +84,39 @@ public:
 	static	MTypeId		id;
 
 	// inputs
-	static  MObject		lookAxis;
-	static  MObject		upAxis;
-	static  MObject		weight;
-	static  MObject		targetMatrix;
-	static  MObject		parentMatrix;
-	static  MObject		jointPosition;
+	static  MObject		targetWorldMatrix;
+	static  MObject		parentWorldMatrix;
+	static  MObject		referenceWorldMatrix;
 	static  MObject		jointOrient;
 	static  MObject		jointOrientX;
 	static  MObject		jointOrientY;
 	static  MObject		jointOrientZ;
+
+	static  MObject		aimAxis;
+	static  MObject		aimAxisFlip;
+	static  MObject		upAxis;
+	static  MObject		upAxisFlip;
+	static  MObject		isMirror;
+	static  MObject		alternateSolution;
+	static  MObject		useNearestMethod;
+	static  MObject		localPosition;
+	static  MObject		weight;
+	static  MObject		referencePosOffset;
+
+
 
 	// ouputs
 	static  MObject		lookAtRotation;
 	static  MObject		lookAtRotationX;
 	static  MObject		lookAtRotationY;
 	static  MObject		lookAtRotationZ;
-	static  MObject		debugOut;
 
 };
 
-MTypeId     baconLookAt::id(0x0012a951);
-MObject     baconLookAt::weight;
-MObject		baconLookAt::lookAxis;
-MObject		baconLookAt::upAxis;
-MObject		baconLookAt::targetMatrix;
-MObject		baconLookAt::parentMatrix;
-MObject		baconLookAt::jointPosition;
+MTypeId     baconLookAt::id( 0x0012a951 );
+MObject		baconLookAt::targetWorldMatrix;
+MObject		baconLookAt::parentWorldMatrix;
+MObject		baconLookAt::referenceWorldMatrix;
 MObject		baconLookAt::jointOrient;
 MObject		baconLookAt::jointOrientX;
 MObject		baconLookAt::jointOrientY;
@@ -118,12 +125,22 @@ MObject		baconLookAt::lookAtRotation;
 MObject		baconLookAt::lookAtRotationX;
 MObject		baconLookAt::lookAtRotationY;
 MObject		baconLookAt::lookAtRotationZ;
-MObject		baconLookAt::debugOut;
+
+MObject		baconLookAt::aimAxis;
+MObject		baconLookAt::aimAxisFlip;
+MObject		baconLookAt::upAxis;
+MObject		baconLookAt::upAxisFlip;
+MObject		baconLookAt::isMirror;
+MObject		baconLookAt::alternateSolution;
+MObject		baconLookAt::useNearestMethod;
+MObject		baconLookAt::localPosition;
+MObject		baconLookAt::weight;
+MObject		baconLookAt::referencePosOffset;
 
 baconLookAt::baconLookAt() {}
 baconLookAt::~baconLookAt() {}
 
-MMatrix setRow(MMatrix matrix, MVector newVector, const int row)
+MMatrix setRow( MMatrix matrix, MVector newVector, const int row)
 {
 	MMatrix returnTM = matrix;
 	returnTM[row][0] = newVector[0];
@@ -158,34 +175,39 @@ MMatrix matrix3(MVector row1, MVector row2, MVector row3, MVector row4)
 	return returnTM;
 }
 
-
-
-MStatus baconLookAt::compute(const MPlug& plug, MDataBlock& data)
+MVector getRow(MMatrix TM, int row)
 {
+	return (MVector(TM[row][0], TM[row][1], TM[row][2]));
+}
 
+MMatrix mirrorMatrix(MMatrix inTM)
+{
+	MMatrix returnTM = MMatrix();
+	returnTM = setRow(returnTM, (MVector(inTM[0][0] * -1.0, inTM[0][1] * -1.0, inTM[0][2] * -1.0)), 0);
+	returnTM = setRow(returnTM, (MVector(inTM[1][0] * -1.0, inTM[1][1] * -1.0, inTM[1][2] * -1.0)), 1);
+	returnTM = setRow(returnTM, (MVector(inTM[2][0] * -1.0, inTM[2][1] * -1.0, inTM[2][2] * -1.0)), 2);
+	return returnTM;
+}
+
+
+
+MStatus baconLookAt::compute( const MPlug& plug, MDataBlock& data )
+{
+	
 	MStatus returnStatus;
-
+ 
 	if
-		(
-			plug == lookAtRotation	||  plug == lookAtRotationX || plug == lookAtRotationY || 
-			plug == lookAtRotationZ ||  plug == debugOut
-		)
+	( 
+		plug == lookAtRotation ||	plug == lookAtRotationX  ||  plug == lookAtRotationY  ||  plug == lookAtRotationZ
+	)
 	{
 		// Handles and Values
-		MDataHandle lookAxisHandle = data.inputValue(lookAxis, &returnStatus);
-		unsigned int lookAxisValue = lookAxisHandle.asInt();
-
-		MDataHandle upAxisHandle = data.inputValue(upAxis, &returnStatus);
-		unsigned int upAxisValue = upAxisHandle.asInt();
-
-		MDataHandle targetMatrixHandle = data.inputValue(targetMatrix, &returnStatus);
-		MFloatMatrix tFM(targetMatrixHandle.asFloatMatrix());
-
-		MDataHandle parentMatrixHandle = data.inputValue(parentMatrix, &returnStatus);
-		MFloatMatrix pFM = parentMatrixHandle.asFloatMatrix();
-
-		MDataHandle jointPositionHandle = data.inputValue(jointPosition, &returnStatus);
-		MVector jointPositionValue = jointPositionHandle.asFloatVector();
+		MDataHandle targetWorldMatrixHandle = data.inputValue(targetWorldMatrix, &returnStatus);
+		MFloatMatrix tFM(targetWorldMatrixHandle.asFloatMatrix());
+		MDataHandle parentWorldMatrixHandle = data.inputValue(parentWorldMatrix, &returnStatus);
+		MFloatMatrix pFM = parentWorldMatrixHandle.asFloatMatrix();
+		MDataHandle referenceWorldMatrixHandle = data.inputValue(referenceWorldMatrix, &returnStatus);
+		MFloatMatrix unFM = referenceWorldMatrixHandle.asFloatMatrix();
 
 		MDataHandle jointOrientXHandle = data.inputValue(jointOrientX, &returnStatus);
 		MAngle jointOrientXValue = jointOrientXHandle.asAngle();
@@ -194,99 +216,133 @@ MStatus baconLookAt::compute(const MPlug& plug, MDataBlock& data)
 		MDataHandle jointOrientZHandle = data.inputValue(jointOrientZ, &returnStatus);
 		MAngle jointOrientZValue = jointOrientZHandle.asAngle();
 
+		MDataHandle weightHandle = data.inputValue(weight, &returnStatus);
+		double weightValue = weightHandle.asDouble();
 		
+		MDataHandle referencePosOffsetHandle = data.inputValue(referencePosOffset, &returnStatus);
+		MVector referencePosOffsetValue = referencePosOffsetHandle.asFloatVector();
+
+
+
+		MDataHandle aimAxisHandle = data.inputValue(aimAxis, &returnStatus);
+		short aimAxisValue = aimAxisHandle.asShort();
+		MDataHandle upAxisHandle = data.inputValue(upAxis, &returnStatus);
+		short upAxisValue = upAxisHandle.asShort();
+		MDataHandle aimAxisFlipHandle = data.inputValue(aimAxisFlip, &returnStatus);
+		bool aimAxisFlipValue = aimAxisFlipHandle.asBool();
+		MDataHandle upAxisFlipHandle = data.inputValue(upAxisFlip, &returnStatus);
+		bool upAxisFlipValue = upAxisFlipHandle.asBool();
+		MDataHandle alternateSolutionHandle = data.inputValue(alternateSolution, &returnStatus);
+		bool alternateSolutionValue = alternateSolutionHandle.asBool();
+		MDataHandle useNearestMethodHandle = data.inputValue(useNearestMethod, &returnStatus);
+		bool useNearestMethodValue = useNearestMethodHandle.asBool();
+		MDataHandle isMirrorHandle = data.inputValue(isMirror, &returnStatus);
+		bool isMirrorValue = isMirrorHandle.asBool();
+
+		MDataHandle localPositionHandle = data.inputValue(localPosition, &returnStatus);
+		MVector localPositionValue = localPositionHandle.asFloatVector();
+
+
 		// Calculation
-		//MMatrix tTM = FloatMatrixToMatrix(tFM);
+		MMatrix targetTM = FloatMatrixToMatrix(tFM);
+		MMatrix parentTM = FloatMatrixToMatrix(pFM);
+		MMatrix referenceTM = FloatMatrixToMatrix(unFM);
+		MMatrix localTM;
 
-		double debugOutValue(2.0);
-		if (lookAxisValue == 1)
+
+		// Aim Direction
+		MVector targetPos(targetTM[3][0], targetTM[3][1], targetTM[3][2]);
+		MMatrix localPositionTM = matrix3(MVector(), MVector(), MVector(), localPositionValue);
+		MMatrix worldPositionTM = localPositionTM * parentTM;
+		MVector originPos(worldPositionTM[3][0], worldPositionTM[3][1], worldPositionTM[3][2]);
+		MVector aimDir = targetPos - originPos;
+		aimDir.normalize();
+		if (aimAxisFlipValue) aimDir.operator*=(-1.0);
+
+		if (useNearestMethodValue)
 		{
-			debugOutValue = 3.0;
-		}
+			MVector localAimDir = aimDir * parentTM.inverse();
+			localAimDir.normalize();
+			MVector testAxisDir;
+			if (aimAxisValue == 0) testAxisDir = MVector(1, 0, 0);
+			if (aimAxisValue == 1) testAxisDir = MVector(0, 1, 0);
+			if (aimAxisValue == 2) testAxisDir = MVector(0, 0, 1);
+			if (upAxisFlipValue) testAxisDir.operator*=(-1.0);
 
+			MVector quatAxis = testAxisDir ^ localAimDir;
+			quatAxis.normalize();
+			double quatAngle = acos(testAxisDir * localAimDir);
+			MQuaternion quatResult(quatAngle, quatAxis);
+			localTM = quatResult.asMatrix();
 
-
-		if (upAxisValue == lookAxisValue)
-		{
-			lookAxisValue = 2 - upAxisValue;
-		}
-
-		MMatrix pTM(FloatMatrixToMatrix(pFM));
-		MMatrix tTM(FloatMatrixToMatrix(tFM));
-
-		//MVector rootPos(pFM[3][0], pFM[3][1], pFM[3][2]);
-		MVector upPos(tFM[3][0], tFM[3][1], tFM[3][2]);
-		MMatrix jointTM(transMatrix(jointPositionValue) * pTM);
-		MVector rootPos(jointTM[3][0], jointTM[3][1], jointTM[3][2]);
-
-		MVector lookVector = upPos - rootPos;
-		lookVector.normalize();
-
-
-		/*
-		MVector upVector(tFM[upAxisValue][0], tFM[upAxisValue][1], tFM[upAxisValue][2]);
-		upVector.normalize();
-		MVector crossVector(0,0,1);
-		MVector orthoUpVector(0,1,0);
-
-		if (lookAxisValue < upAxisValue || (lookAxisValue - upAxisValue) == 2)
-		{
-			// 0,1
-			// 1,2
-			// 2,0
-
-			// look = 0, up = 1
-			// look = 1, up = 2
-			// look = 2, up = 0
-			crossVector = lookVector ^ upVector;
-			crossVector.normalize();
-			orthoUpVector = crossVector ^ lookVector;
-			orthoUpVector.normalize();
 		}
 		else
 		{
-			// 1,0
-			// 2,1
-			// 0,2
+			// UP Direction
+			MVector upDir;
+			if (upAxisValue == 0) upDir = MVector(targetTM[0][0], targetTM[0][1], targetTM[0][2]);
+			if (upAxisValue == 1) upDir = MVector(targetTM[1][0], targetTM[1][1], targetTM[1][2]);
+			if (upAxisValue == 2) upDir = MVector(targetTM[2][0], targetTM[2][1], targetTM[2][2]);
+			if (upAxisValue == 3) upDir = MVector(parentTM[0][0], parentTM[0][1], parentTM[0][2]);
+			if (upAxisValue == 4) upDir = MVector(parentTM[1][0], parentTM[1][1], parentTM[1][2]);
+			if (upAxisValue == 5) upDir = MVector(parentTM[2][0], parentTM[2][1], parentTM[2][2]);
+			if (upAxisValue == 6) upDir = MVector(referenceTM[0][0], referenceTM[0][1], referenceTM[0][2]);
+			if (upAxisValue == 7) upDir = MVector(referenceTM[1][0], referenceTM[1][1], referenceTM[1][2]);
+			if (upAxisValue == 8) upDir = MVector(referenceTM[2][0], referenceTM[2][1], referenceTM[2][2]);
+			if (upAxisValue == 9)
+			{
+				MMatrix refOffset = transMatrix(referencePosOffsetValue) * referenceTM;
+				upDir = MVector(refOffset[3][0], refOffset[3][1], refOffset[3][2]) - originPos;
+			}
 
-			crossVector = upVector ^ lookVector;
-			crossVector.normalize();
-			orthoUpVector = lookVector ^ crossVector;
-			orthoUpVector.normalize();
+			if (upAxisFlipValue)  upDir.operator*=(-1.0);
+			upDir.normalize();
+
+			// Solving Matrix
+			MVector crossDir;
+			MVector orthoUpDir;
+			if (alternateSolutionValue == true)
+			{
+				orthoUpDir = aimDir.operator^(upDir);
+				orthoUpDir.normalize();
+				crossDir = orthoUpDir.operator^(aimDir);
+				crossDir.normalize();
+			}
+			else
+			{
+				crossDir = aimDir.operator^(upDir);
+				crossDir.normalize();
+				orthoUpDir = crossDir.operator^(aimDir);
+				orthoUpDir.normalize();
+			}
+
+
+			MMatrix worldTM;
+			if (aimAxisValue == 0) worldTM = matrix3(aimDir, orthoUpDir, crossDir, MVector());
+			if (aimAxisValue == 1) worldTM = matrix3(crossDir, aimDir, orthoUpDir, MVector());
+			if (aimAxisValue == 2) worldTM = matrix3(orthoUpDir, crossDir, aimDir, MVector());
+			localTM = worldTM * parentTM.inverse();
+
 		}
 
-		int crossAxisValue = 3 - upAxisValue + lookAxisValue;
-		MMatrix worldTM = MMatrix();
-		worldTM = setRow(worldTM, lookVector,		lookAxisValue);
-		worldTM = setRow(worldTM, orthoUpVector,	upAxisValue);
-		worldTM = setRow(worldTM, crossVector,		crossAxisValue);
-		*/
+		if (isMirrorValue) 
+		{ 
+			localTM = mirrorMatrix(localTM); 
+		}
 
-		// Temp Hardcode ------
-
-		MVector upVector(tFM[0][0], tFM[0][1], tFM[0][2]);
-		upVector.normalize();
-		MVector crossVector(upVector ^ lookVector);
-		crossVector.normalize();
-		MVector orthoUpVector(lookVector ^ crossVector);
-		orthoUpVector.normalize();
-		MMatrix worldTM = matrix3(orthoUpVector, lookVector, crossVector, rootPos);
-
-		//---------------------
-
-
-		MMatrix localTM = worldTM * pTM.inverse();
 		MMatrix jointOrientTM = MEulerRotation(jointOrientXValue.value(), jointOrientYValue.value(),
 			jointOrientZValue.value()).asMatrix();
 		MMatrix outputTM = localTM * jointOrientTM.inverse();
 		MTransformationMatrix ouputTransformationMatrix = MTransformationMatrix(outputTM);
-		MEulerRotation outputAngles = ouputTransformationMatrix.eulerRotation();
 
-		//MStatus setUnit(MAngle::Unit kDegrees);
-		//MEulerRotation outputAngles(20.0, 5.0, 10.0, MEulerRotation::kXYZ);
+
+		//MEulerRotation outputAngles = ouputTransformationMatrix.eulerRotation();
+		MQuaternion outQuat = slerp(MQuaternion(), ouputTransformationMatrix.rotation(), weightValue);
+		MEulerRotation outputAngles = outQuat.asEulerRotation();
+
 
 		// Set OutPut Values
-		if (returnStatus != MS::kSuccess)
+		if( returnStatus != MS::kSuccess )
 			cerr << "ERROR getting data" << endl;
 		else
 		{
@@ -302,17 +358,9 @@ MStatus baconLookAt::compute(const MPlug& plug, MDataBlock& data)
 			MDataHandle lookAtRotationZHandle = data.outputValue(baconLookAt::lookAtRotationZ);
 			lookAtRotationZHandle.setMAngle(MAngle(outputAngles.z));
 			lookAtRotationZHandle.setClean();
-
-			// Debug Output
-			MDataHandle debugOutHandle = data.inputValue(debugOut, &returnStatus);
-			debugOutHandle.setDouble(debugOutValue);
-			debugOutHandle.setClean();
-
-
-
 		}
-	}
-	else {
+	
+	} else {
 		return MS::kUnknownParameter;
 	}
 
@@ -334,30 +382,101 @@ MStatus baconLookAt::initialize()
 	MStatus				stat;
 
 	// INPUTS ---------------------------------------------------------------------
-
-	// weight
-	weight = numAttr.create("weight", "w", MFnNumericData::kFloat, 0.0);
+	
+	// input weight
+	weight = numAttr.create("weight", "w", MFnNumericData::kDouble, 1.0);
+	numAttr.setWritable(true);
 	numAttr.setStorable(true);
 	numAttr.setKeyable(true);
-	numAttr.setWritable(true);
+	numAttr.setMin(0.0);
+	numAttr.setMax(1.0);
+	stat = addAttribute(weight);
 
-	// Input Look Axis 
-	lookAxis = enumAttr.create("lookAxis", "la", 1);
-	enumAttr.addField("X Axis", 0);
-	enumAttr.addField("Y Axis", 1);
-	enumAttr.addField("Z Axis", 2);
+
+	// aimAxis
+	aimAxis = enumAttr.create("aimAxis", "aima", 0);
+	enumAttr.addField("X", 0);
+	enumAttr.addField("Y", 1);
+	enumAttr.addField("Z", 2);
 	enumAttr.setHidden(false);
 	enumAttr.setKeyable(true);
-	stat = addAttribute(lookAxis);
-	
-	// Input Up Axis 
-	upAxis = enumAttr.create("rollAxis", "ra", 0);
-	enumAttr.addField("X Axis", 0);
-	enumAttr.addField("Y Axis", 1);
-	enumAttr.addField("Z Axis", 2);
+	stat = addAttribute(aimAxis);
+	if (!stat) { stat.perror("addAttribute"); return stat; }
+
+	// upAxis
+	upAxis = enumAttr.create("upAxis", "upa", 0);
+	enumAttr.addField("Target X", 0);
+	enumAttr.addField("Target Y", 1);
+	enumAttr.addField("Target Z", 2);
+	enumAttr.addField("Parent X", 3);
+	enumAttr.addField("Parent Y", 4);
+	enumAttr.addField("Parent Z", 5);
+	enumAttr.addField("Reference X", 6);
+	enumAttr.addField("Reference Y", 7);
+	enumAttr.addField("Reference Z", 8);
+	enumAttr.addField("Reference Pos", 9);
 	enumAttr.setHidden(false);
 	enumAttr.setKeyable(true);
 	stat = addAttribute(upAxis);
+	if (!stat) { stat.perror("addAttribute"); return stat; }
+
+	// ReferencePosOffset
+	referencePosOffset = numAttr.createPoint("ReferencePosOffset", "RefPosOff");
+	stat = addAttribute(referencePosOffset);
+
+
+	// aimAxisFlip
+	aimAxisFlip = numAttr.create("aimAxisFlip", "aaf", MFnNumericData::kBoolean);
+	numAttr.setDefault(false);
+	numAttr.setKeyable(true);
+	numAttr.setReadable(true);
+	numAttr.setWritable(true);
+	numAttr.setStorable(true);
+	stat = addAttribute(aimAxisFlip);
+
+	// upAxisFlip
+	upAxisFlip = numAttr.create("upAxisFlip", "upf", MFnNumericData::kBoolean);
+	numAttr.setDefault(false);
+	numAttr.setKeyable(true);
+	numAttr.setReadable(true);
+	numAttr.setWritable(true);
+	numAttr.setStorable(true);
+	stat = addAttribute(upAxisFlip);
+
+	// alternateSolution
+	alternateSolution = numAttr.create("alternateSolution", "uas", MFnNumericData::kBoolean);
+	numAttr.setDefault(false);
+	numAttr.setKeyable(true);
+	numAttr.setReadable(true);
+	numAttr.setWritable(true);
+	numAttr.setStorable(true);
+	stat = addAttribute(alternateSolution);
+
+	// useNearestMethod
+	useNearestMethod = numAttr.create("useNearestMethod", "useSM", MFnNumericData::kBoolean);
+	numAttr.setDefault(false);
+	numAttr.setKeyable(true);
+	numAttr.setReadable(true);
+	numAttr.setWritable(true);
+	numAttr.setStorable(true);
+	stat = addAttribute(useNearestMethod);
+
+	// isMirror
+	isMirror = numAttr.create("isMirror", "imirr", MFnNumericData::kBoolean);
+	numAttr.setDefault(false);
+	numAttr.setKeyable(true);
+	numAttr.setReadable(true);
+	numAttr.setWritable(true);
+	numAttr.setStorable(true);
+	stat = addAttribute(isMirror);
+
+
+	// localPosition
+	localPosition = numAttr.createPoint("localPosition", "lpos");
+	numAttr.setStorable(true);
+	numAttr.setWritable(true);
+	numAttr.setKeyable(true);
+	stat = addAttribute(localPosition);
 
 
 	// input jointOrientX
@@ -382,25 +501,25 @@ MStatus baconLookAt::initialize()
 	numAttr.setKeyable(true);
 	stat = addAttribute(jointOrient);
 
-	// input targetMatrix
-	targetMatrix = matrixAttr.create("targetMatrix", "twTM", matrixAttr.kFloat);
+	// input targetWorldMatrix
+	targetWorldMatrix = matrixAttr.create("targetWorldMatrix", "twTM", matrixAttr.kFloat);
 	matrixAttr.setStorable(true);
 	matrixAttr.setKeyable(true);
-	stat = addAttribute(targetMatrix);
+	stat = addAttribute(targetWorldMatrix);
 
-	// input parentMatrix
-	parentMatrix = matrixAttr.create("parentMatrix", "pTM", matrixAttr.kFloat);
+	// input parentWorldMatrix
+	parentWorldMatrix = matrixAttr.create("parentWorldMatrix", "piTM", matrixAttr.kFloat);
 	matrixAttr.setStorable(true);
 	matrixAttr.setKeyable(true);
-	stat = addAttribute(parentMatrix);
+	stat = addAttribute(parentWorldMatrix);
 
-	// input joint position
-	jointPosition = numAttr.createPoint("jointPosition", "jp");
-	numAttr.setWritable(true);
-	numAttr.setStorable(true);
-	numAttr.setKeyable(true);
-	stat = addAttribute(jointPosition);
-	
+	// input referenceWorldMatrix
+	referenceWorldMatrix = matrixAttr.create("referenceWorldMatrix", "refTM", matrixAttr.kFloat);
+	matrixAttr.setStorable(true);
+	matrixAttr.setKeyable(true);
+	stat = addAttribute(referenceWorldMatrix);
+
+
 
 
 	// OUTUTS ---------------------------------------------------------------------
@@ -419,19 +538,8 @@ MStatus baconLookAt::initialize()
 	numAttr.setHidden(false);
 	stat = addAttribute(lookAtRotation);
 
-	// Output debugOut
-	debugOut = uAttr.create("debugOut", "do", uAttr.kDistance, 0.0);
-	uAttr.setHidden(false);
-	uAttr.setWritable(false);
-	uAttr.setStorable(true);
-	uAttr.setKeyable(true);
-	stat = addAttribute(debugOut);
-
-
-	
-
 	//AFFECTS ---------------------------------------------------------------------
-	MObject AffectedByMany[] = { lookAtRotation, lookAtRotationX, lookAtRotationY, lookAtRotationZ, debugOut };
+	MObject AffectedByMany[] = { lookAtRotation, lookAtRotationX, lookAtRotationY, lookAtRotationZ };
 
 	for (MObject& obj : AffectedByMany)
 	{
@@ -439,10 +547,18 @@ MStatus baconLookAt::initialize()
 		attributeAffects(jointOrientX,		obj);
 		attributeAffects(jointOrientY,		obj);
 		attributeAffects(jointOrientZ,		obj);
-		attributeAffects(targetMatrix,		obj);
-		attributeAffects(parentMatrix,		obj);
-		attributeAffects(lookAxis,			obj);
+		attributeAffects(targetWorldMatrix,	obj);
+		attributeAffects(parentWorldMatrix, obj);
+		attributeAffects(referenceWorldMatrix, obj);
+		attributeAffects(aimAxis,			obj);
+		attributeAffects(aimAxisFlip,		obj);
 		attributeAffects(upAxis,			obj);
+		attributeAffects(upAxisFlip,		obj);
+		attributeAffects(localPosition,		obj);
+		attributeAffects(alternateSolution, obj);
+		attributeAffects(useNearestMethod,  obj);
+		attributeAffects(weight, 			obj);
+		attributeAffects(isMirror, 			obj);
 	}
 
 	return MS::kSuccess;
