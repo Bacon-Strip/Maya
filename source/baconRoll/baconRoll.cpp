@@ -86,7 +86,7 @@ public:
 	static	MTypeId		id;
 
 	// inputs
-	static  MObject		rollType;
+	//static  MObject		rollType;
 	static  MObject		weight1;
 	static  MObject		weight2;
 	static  MObject		targetMatrix;
@@ -111,7 +111,7 @@ public:
 MTypeId     baconRoll::id(0x0012a952);
 MObject     baconRoll::weight1;
 MObject     baconRoll::weight2;
-MObject		baconRoll::rollType;
+//MObject		baconRoll::rollType;
 MObject		baconRoll::targetMatrix;
 MObject		baconRoll::parentMatrix;
 MObject		baconRoll::offsetRotation;
@@ -191,8 +191,8 @@ MStatus baconRoll::compute(const MPlug& plug, MDataBlock& data)
 		MDataHandle weight2Handle = data.inputValue(weight2, &returnStatus);
 		float weight2Value = weight2Handle.asFloat();
 
-		MDataHandle rollTypeHandle = data.inputValue(rollType, &returnStatus);
-		unsigned int rollTypeValue = rollTypeHandle.asInt();
+		//MDataHandle rollTypeHandle = data.inputValue(rollType, &returnStatus);
+		//unsigned int rollTypeValue = rollTypeHandle.asInt();
 
 		MDataHandle targetMatrixHandle = data.inputValue(targetMatrix, &returnStatus);
 		MFloatMatrix tFM(targetMatrixHandle.asFloatMatrix());
@@ -211,16 +211,18 @@ MStatus baconRoll::compute(const MPlug& plug, MDataBlock& data)
 
 		/*
 
-			// BICEP (ref = clavicle, parent = upperArm)
-			local parentTM = MyParent.transform			local refTM = _ref.transform * (inverse parentTM )			local defaultVector = [ 1, 0, 0 ]			local currentVector = normalize refTM.row1			local revAxis = normalize( cross defaultVector currentVector )			local revAngle = acos( dot defaultVector currentVector )			local revQuat = (quat revAngle revAxis)			
-			local XlessQuat = ( refTM.rotation + revQuat ) --as matrix3
+			local parentTM = MyParent.transform			local refTM = _ref.transform * (inverse parentTM )			local defaultVector = [ 1, 0, 0 ]			local currentVector = normalize refTM.row1			local revAxis = normalize( cross defaultVector currentVector )			local revAngle = acos( dot defaultVector currentVector )			local revQuat = (quat revAngle revAxis)			local XlessQuat = ( refTM.rotation + revQuat ) --as matrix3
 			local localRot = slerp XlessQuat (quat 1) 0.5			localRot as matrix3
 
 
 			// WRIST (ref = hand, parent = parentArm)
-			local parentTM = MyParent.transform			local refTM = ( OffsetTM * _ref.transform ) * ( inverse parentTM )			local defaultVector = [ 1, 0, 0 ]			local currentVector = ( normalize refTM.row1 )			local revAxis = normalize( cross defaultVector currentVector )			local revAngle = acos( dot defaultVector currentVector )			local revQuat = quat revAngle revAxis			
-			local XlessQuat = ( refTM.rotation + revQuat )
+			// BICEP (ref = clavicle, parent = upperArm)
+			local parentTM = MyParent.transform			local refTM = ( OffsetTM * _ref.transform ) * ( inverse parentTM )			local defaultVector = [ 1, 0, 0 ]			local currentVector = ( normalize refTM.row1 )			local revAxis = normalize( cross defaultVector currentVector )			local revAngle = acos( dot defaultVector currentVector )			local revQuat = quat revAngle revAxis			local XlessQuat = ( refTM.rotation + revQuat )
 			local RotX = ((XlessQuat as EulerAngles).x) * 0.33
+
+			// or
+			local localRot = slerp XlessQuat (quat 1) 0.5
+
 			if RotX >= 90.0 do rotX = 90.0
 			if RotX <= -90.0 do rotX = -90.0
 			(RotateXMAtrix RotX).rotation
@@ -239,7 +241,7 @@ MStatus baconRoll::compute(const MPlug& plug, MDataBlock& data)
 		MVector revAxis = defaultVector ^ currentVector;
 		revAxis.normalize();
 		double revAngle = acos(currentVector.x);
-		float angleSign(1.0);
+		//float angleSign(1.0);
 		//if (rollTypeValue == 1) { angleSign = -1.0; }
 		MQuaternion revQuat(revAngle, revAxis);
 		MQuaternion refRotation = MTransformationMatrix(refTM).rotation();
@@ -247,36 +249,6 @@ MStatus baconRoll::compute(const MPlug& plug, MDataBlock& data)
 		MEulerRotation localRot = XlessQuat.asEulerRotation();
 
 
-
-		/*
-		double revAngle = acos( currentVector.x );
-		float angleSign(1.0f);
-		if (rollTypeValue == 0)	{ angleSign = -1.0f; }
-
-		MQuaternion rollRot(angleSign * revAngle, revAxis);
-
-		if (rollTypeValue == 0)
-		{
-			//parent (wrist)
-			rollRot = rollRot * refRotation.inverse();
-		}
-		else
-		{
-			// child (bicep)
-			rollRot = refRotation * rollRot;
-		}
-		*/
-		/*
-		// Weights
-		MQuaternion rollRot1 = XlessQuat;
-		MQuaternion rollRot2 = XlessQuat;
-		rollRot1.w *= weight1Value;
-		rollRot2.w *= weight2Value;
-
-		// As Euler
-		MEulerRotation outputAngles1 = rollRot1.asEulerRotation();
-		MEulerRotation outputAngles2 = rollRot2.asEulerRotation();
-		*/
 
 		// rollRotation1X
 		MDataHandle rollRotation1XHandle = data.outputValue(baconRoll::rollRotation1X);
@@ -345,12 +317,12 @@ MStatus baconRoll::initialize()
 	stat = addAttribute(weight2);
 
 	// Input Look Axis 
-	rollType = enumAttr.create("rollType", "rt", 1);
-	enumAttr.addField("Parent (Wrist)", 0);
-	enumAttr.addField("Child (Bicep)", 1);
-	enumAttr.setHidden(false);
-	enumAttr.setKeyable(true);
-	stat = addAttribute(rollType);
+	//rollType = enumAttr.create("rollType", "rt", 1);
+	//enumAttr.addField("Parent (Wrist)", 0);
+	//enumAttr.addField("Child (Bicep)", 1);
+	//enumAttr.setHidden(false);
+	//enumAttr.setKeyable(true);
+	//stat = addAttribute(rollType);
 	
 	// input offsetRotationX
 	offsetRotationX = uAttr.create("offsetRotationX", "tarx", uAttr.kAngle, 0.0);
@@ -428,11 +400,11 @@ MStatus baconRoll::initialize()
 		attributeAffects(offsetRotationX,	obj);
 		attributeAffects(offsetRotationY,	obj);
 		attributeAffects(offsetRotationZ,	obj);
-		attributeAffects(targetMatrix,	obj);
-		attributeAffects(parentMatrix,	obj);
-		attributeAffects(weight1,		obj);
-		attributeAffects(weight2,		obj);
-		attributeAffects(rollType,		obj);
+		attributeAffects(targetMatrix,		obj);
+		attributeAffects(parentMatrix,		obj);
+		attributeAffects(weight1,			obj);
+		attributeAffects(weight2,			obj);
+		//attributeAffects(rollType,		obj);
 	}
 
 	return MS::kSuccess;
