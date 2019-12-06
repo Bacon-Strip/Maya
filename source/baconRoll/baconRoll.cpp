@@ -91,10 +91,10 @@ public:
 	static  MObject		weight2;
 	static  MObject		targetMatrix;
 	static  MObject		parentMatrix;
-	static  MObject		targetRotation;
-	static  MObject		targetRotationX;
-	static  MObject		targetRotationY;
-	static  MObject		targetRotationZ;
+	static  MObject		offsetRotation;
+	static  MObject		offsetRotationX;
+	static  MObject		offsetRotationY;
+	static  MObject		offsetRotationZ;
 
 	// ouputs
 	static  MObject		rollRotation1;
@@ -114,10 +114,10 @@ MObject     baconRoll::weight2;
 MObject		baconRoll::rollType;
 MObject		baconRoll::targetMatrix;
 MObject		baconRoll::parentMatrix;
-MObject		baconRoll::targetRotation;
-MObject		baconRoll::targetRotationX;
-MObject		baconRoll::targetRotationY;
-MObject		baconRoll::targetRotationZ;
+MObject		baconRoll::offsetRotation;
+MObject		baconRoll::offsetRotationX;
+MObject		baconRoll::offsetRotationY;
+MObject		baconRoll::offsetRotationZ;
 MObject		baconRoll::rollRotation1;
 MObject		baconRoll::rollRotation1X;
 MObject		baconRoll::rollRotation1Y;
@@ -200,80 +200,108 @@ MStatus baconRoll::compute(const MPlug& plug, MDataBlock& data)
 		MDataHandle parentMatrixHandle = data.inputValue(parentMatrix, &returnStatus);
 		MFloatMatrix pFM = parentMatrixHandle.asFloatMatrix();
 
-		MDataHandle targetRotationXHandle = data.inputValue(targetRotationX, &returnStatus);
-		MAngle targetRotationXValue = targetRotationXHandle.asAngle();
-		MDataHandle targetRotationYHandle = data.inputValue(targetRotationY, &returnStatus);
-		MAngle targetRotationYValue = targetRotationYHandle.asAngle();
-		MDataHandle targetRotationZHandle = data.inputValue(targetRotationZ, &returnStatus);
-		MAngle targetRotationZValue = targetRotationZHandle.asAngle();
+		MDataHandle offsetRotationXHandle = data.inputValue(offsetRotationX, &returnStatus);
+		MAngle offsetRotationXValue = offsetRotationXHandle.asAngle();
+		MDataHandle offsetRotationYHandle = data.inputValue(offsetRotationY, &returnStatus);
+		MAngle offsetRotationYValue = offsetRotationYHandle.asAngle();
+		MDataHandle offsetRotationZHandle = data.inputValue(offsetRotationZ, &returnStatus);
+		MAngle offsetRotationZValue = offsetRotationZHandle.asAngle();
 
 		// Calculation
-		MMatrix targetRotationTM = MEulerRotation(targetRotationXValue.value(), targetRotationYValue.value(),
-			targetRotationZValue.value()).asMatrix();
+
+		/*
+
+			// BICEP (ref = clavicle, parent = upperArm)
+			local parentTM = MyParent.transform			local refTM = _ref.transform * (inverse parentTM )			local defaultVector = [ 1, 0, 0 ]			local currentVector = normalize refTM.row1			local revAxis = normalize( cross defaultVector currentVector )			local revAngle = acos( dot defaultVector currentVector )			local revQuat = (quat revAngle revAxis)			
+			local XlessQuat = ( refTM.rotation + revQuat ) --as matrix3
+			local localRot = slerp XlessQuat (quat 1) 0.5			localRot as matrix3
+
+
+			// WRIST (ref = hand, parent = parentArm)
+			local parentTM = MyParent.transform			local refTM = ( OffsetTM * _ref.transform ) * ( inverse parentTM )			local defaultVector = [ 1, 0, 0 ]			local currentVector = ( normalize refTM.row1 )			local revAxis = normalize( cross defaultVector currentVector )			local revAngle = acos( dot defaultVector currentVector )			local revQuat = quat revAngle revAxis			
+			local XlessQuat = ( refTM.rotation + revQuat )
+			local RotX = ((XlessQuat as EulerAngles).x) * 0.33
+			if RotX >= 90.0 do rotX = 90.0
+			if RotX <= -90.0 do rotX = -90.0
+			(RotateXMAtrix RotX).rotation
+
+		
+		*/
+
 		MMatrix pTM(FloatMatrixToMatrix(pFM));
-		MMatrix tTM(targetRotationTM * FloatMatrixToMatrix(tFM));
-		MMatrix localTM(tTM * pTM.inverse());
-		MQuaternion localRot = MTransformationMatrix(localTM).rotation(); 
+		MMatrix offsetTM = MEulerRotation(offsetRotationXValue.value(), offsetRotationYValue.value(),
+			offsetRotationZValue.value()).asMatrix();
+		MMatrix tTM(offsetTM * FloatMatrixToMatrix(tFM));
+		MMatrix refTM(tTM * pTM.inverse());
+		MVector defaultVector(MVector(1, 0, 0));
+		MVector currentVector = getRow(refTM, 0);
+		currentVector.normalize();
+		MVector revAxis = defaultVector ^ currentVector;
+		revAxis.normalize();
+		double revAngle = acos(currentVector.x);
+		float angleSign(1.0);
+		//if (rollTypeValue == 1) { angleSign = -1.0; }
+		MQuaternion revQuat(revAngle, revAxis);
+		MQuaternion refRotation = MTransformationMatrix(refTM).rotation();
+		MQuaternion XlessQuat = refRotation * revQuat.inverse();
+		MEulerRotation localRot = XlessQuat.asEulerRotation();
 
-		MVector xAxis = getRow(localTM, 0);
-		xAxis.normalize();
-		MVector vector = xAxis ^ MVector(1, 0, 0);
-		vector.normalize();
-		double angle = acos( xAxis.x );
+
+
+		/*
+		double revAngle = acos( currentVector.x );
 		float angleSign(1.0f);
-		if (rollTypeValue == 0)
-		{
-			angleSign = -1.0f;
-		}
+		if (rollTypeValue == 0)	{ angleSign = -1.0f; }
 
-		MQuaternion rollRot(angleSign * angle, vector);
+		MQuaternion rollRot(angleSign * revAngle, revAxis);
 
 		if (rollTypeValue == 0)
 		{
 			//parent (wrist)
-			rollRot = rollRot * localRot.inverse();
+			rollRot = rollRot * refRotation.inverse();
 		}
 		else
 		{
 			// child (bicep)
-			rollRot = localRot * rollRot;
+			rollRot = refRotation * rollRot;
 		}
-
+		*/
+		/*
 		// Weights
-		MQuaternion rollRot1 = rollRot;
-		MQuaternion rollRot2 = rollRot;
+		MQuaternion rollRot1 = XlessQuat;
+		MQuaternion rollRot2 = XlessQuat;
 		rollRot1.w *= weight1Value;
 		rollRot2.w *= weight2Value;
 
 		// As Euler
 		MEulerRotation outputAngles1 = rollRot1.asEulerRotation();
 		MEulerRotation outputAngles2 = rollRot2.asEulerRotation();
-
+		*/
 
 		// rollRotation1X
 		MDataHandle rollRotation1XHandle = data.outputValue(baconRoll::rollRotation1X);
-		rollRotation1XHandle.setMAngle(MAngle(outputAngles1.x));
+		rollRotation1XHandle.setMAngle(MAngle(localRot.x * weight1Value));
 		rollRotation1XHandle.setClean();
 		// rollRotation1Y
 		MDataHandle rollRotation1YHandle = data.outputValue(baconRoll::rollRotation1Y);
-		rollRotation1YHandle.setMAngle(MAngle(outputAngles1.y));
+		rollRotation1YHandle.setMAngle(MAngle(0.0));
 		rollRotation1YHandle.setClean();
 		// rollRotation1X
 		MDataHandle rollRotation1ZHandle = data.outputValue(baconRoll::rollRotation1Z);
-		rollRotation1ZHandle.setMAngle(MAngle(outputAngles1.z));
+		rollRotation1ZHandle.setMAngle(MAngle(0.0));
 		rollRotation1ZHandle.setClean();
 
 		// rollRotation2X
 		MDataHandle rollRotation2XHandle = data.outputValue(baconRoll::rollRotation2X);
-		rollRotation2XHandle.setMAngle(MAngle(outputAngles2.x));
+		rollRotation2XHandle.setMAngle(MAngle(localRot.x * weight2Value));
 		rollRotation2XHandle.setClean();
 		// rollRotation2Y
 		MDataHandle rollRotation2YHandle = data.outputValue(baconRoll::rollRotation2Y);
-		rollRotation2YHandle.setMAngle(MAngle(outputAngles2.y));
+		rollRotation2YHandle.setMAngle(MAngle(0.0));
 		rollRotation2YHandle.setClean();
 		// rollRotation2X
 		MDataHandle rollRotation2ZHandle = data.outputValue(baconRoll::rollRotation2Z);
-		rollRotation2ZHandle.setMAngle(MAngle(outputAngles2.z));
+		rollRotation2ZHandle.setMAngle(MAngle(0.0));
 		rollRotation2ZHandle.setClean();
 
 	}
@@ -324,27 +352,27 @@ MStatus baconRoll::initialize()
 	enumAttr.setKeyable(true);
 	stat = addAttribute(rollType);
 	
-	// input targetRotationX
-	targetRotationX = uAttr.create("targetRotationX", "tarx", uAttr.kAngle, 0.0);
+	// input offsetRotationX
+	offsetRotationX = uAttr.create("offsetRotationX", "tarx", uAttr.kAngle, 0.0);
 	uAttr.setWritable(true);
 	uAttr.setStorable(true);
 
-	// input targetRotationY
-	targetRotationY = uAttr.create("targetRotationY", "tary", uAttr.kAngle, 0.0);
+	// input offsetRotationY
+	offsetRotationY = uAttr.create("offsetRotationY", "tary", uAttr.kAngle, 0.0);
 	uAttr.setWritable(true);
 	uAttr.setStorable(true);
 
-	// input targetRotationZ
-	targetRotationZ = uAttr.create("targetRotationZ", "tarz", uAttr.kAngle, 0.0);
+	// input offsetRotationZ
+	offsetRotationZ = uAttr.create("offsetRotationZ", "tarz", uAttr.kAngle, 0.0);
 	uAttr.setWritable(true);
 	uAttr.setStorable(true);
 
-	// input targetRotation
-	targetRotation = numAttr.create("targetRotation", "tar", targetRotationX, targetRotationY, targetRotationZ);
+	// input offsetRotation
+	offsetRotation = numAttr.create("offsetRotation", "tar", offsetRotationX, offsetRotationY, offsetRotationZ);
 	numAttr.setWritable(true);
 	numAttr.setStorable(true);
 	numAttr.setKeyable(true);
-	stat = addAttribute(targetRotation);
+	stat = addAttribute(offsetRotation);
 
 	// input targetMatrix
 	targetMatrix = matrixAttr.create("targetMatrix", "twTM", matrixAttr.kFloat);
@@ -396,10 +424,10 @@ MStatus baconRoll::initialize()
 
 	for (MObject& obj : AffectedByMany)
 	{
-		attributeAffects(targetRotation,	obj);
-		attributeAffects(targetRotationX,	obj);
-		attributeAffects(targetRotationY,	obj);
-		attributeAffects(targetRotationZ,	obj);
+		attributeAffects(offsetRotation,	obj);
+		attributeAffects(offsetRotationX,	obj);
+		attributeAffects(offsetRotationY,	obj);
+		attributeAffects(offsetRotationZ,	obj);
 		attributeAffects(targetMatrix,	obj);
 		attributeAffects(parentMatrix,	obj);
 		attributeAffects(weight1,		obj);
